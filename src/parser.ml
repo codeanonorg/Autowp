@@ -1,6 +1,11 @@
+(**
+   Functionnal parser for specifications and programs
+*)
+
 open Opal
 open Logic
 open Imp
+open Notations
 
 let some p = many p >>= (function
     | [] -> mzero
@@ -51,7 +56,7 @@ and parse_lfactor inp = (
 ) inp
 
 
-let rec parse_seq inp = ((some parse_stmt) => mk_seq) inp
+let rec parse_seq inp = ((some parse_stmt) => seqc_of_list) inp
 
 and parse_stmt inp =
   ((spaces >> parse_aff)
@@ -59,10 +64,10 @@ and parse_stmt inp =
    <|> (spaces >> parse_if)) inp
 
 and parse_aff =
-  let* dst = parse_id in
+  let* dst = spaces >> parse_id in
   let* _   = token "=" in
   let* src = parse_expr in
-  let* _ = token ";" in
+  let* _ = token ";" << spaces in
   return (Aff (dst, src))
 
 and parse_if inp =
@@ -83,6 +88,16 @@ and parse_ifElse inp =
     return (IfElse (cond, body1, body2))
   end inp
 
-let parse_spec s = parse parse_cond (LazyStream.of_string s)
+let parse_spec_opt s = parse parse_cond (LazyStream.of_string s)
 
-let parse_prog s = parse parse_seq (LazyStream.of_string s)
+let parse_prog_opt s = parse parse_seq (LazyStream.of_string s)
+
+let parse_spec s =
+  match parse_spec_opt s with
+  | None -> failwith "Parsing error"
+  | Some x -> x
+
+let parse_prog s =
+  match parse_prog_opt s with
+  | None -> failwith "Parsing error"
+  | Some x -> x

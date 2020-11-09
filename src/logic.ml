@@ -1,8 +1,14 @@
+(**
+   A Logic to write specifications for {!Imp} programs
+*)
+
+(** Terms of the logic *)
 type term =
   | Int of int
   | Var of string
   | Fun of string * term list
 
+(** Formulae of the logic *)
 type formula =
   | Pred of string * term list
   | And of formula * formula
@@ -10,35 +16,13 @@ type formula =
   | Impl of formula * formula
   | Not of formula
 
-let eq a b = Pred ("=", [a; b])
-
-let gt a b = Pred (">", [a; b])
-
-let ge a b = Pred (">=", [a; b])
-
-let le a b = Pred ("<=", [a; b])
-
-let lt a b = Pred ("<", [a; b])
-
-let sum i j t = Fun ("Sum", [i; j; t])
-
-let add a b = Fun ("+", [a; b])
-
-let sub a b = Fun ("-", [a; b])
-
-let mul a b = Fun ("*", [a; b])
-
-let div a b = Fun ("/", [a; b])
-
-let top = Pred ("True", [])
-
-let bot = Pred ("False", [])
-
+(** Substitute an id with a term in a term *)
 let rec alpha_term v e = function
   | Var v' -> if v = v' then e else Var v'
   | Fun (s, ts) -> Fun (s, List.map (alpha_term v e) ts)
   | Int i -> Int i
 
+(** Substitute an id with a term in a formula *)
 let rec alpha v e f =
   match f with
   | Pred (p, ts)  -> Pred (p, List.map (alpha_term v e) ts)
@@ -47,6 +31,7 @@ let rec alpha v e f =
   | Impl (t1, t2) -> Impl (alpha v e t1, alpha v e t2)
   | Not t -> Not (alpha v e t)
 
+(** Term to string conversion *)
 let rec str_of_term =
   function
   | Var v -> v
@@ -63,6 +48,7 @@ let rec str_of_term =
     end
   | Int i -> string_of_int i
 
+(** Formula to string conversion *)
 let rec str_of_form f =
   match f with
   | Pred (p, ts) -> begin
@@ -80,7 +66,7 @@ let rec str_of_form f =
         Printf.sprintf "%s(%s)" p args
     end
   | Or (f1, f2) ->
-    Printf.sprintf "(%s \\/ %s)" (str_of_form f1) (str_of_form f2)
+    Printf.sprintf "%s \\/ %s" (str_of_form f1) (str_of_form f2)
   | And (f1, f2) ->
     Printf.sprintf "(%s /\\ %s)" (str_of_form f1) (str_of_form f2)
   | Impl (f1, f2) ->
