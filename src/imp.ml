@@ -41,7 +41,6 @@ let ifThen a b = If (a, b)
 
 let ifElse a b c = IfElse (a, b, c)
 
-
 let ex_prog_swap () =
   let va = Var "A" in
   let vb = Var "B" in

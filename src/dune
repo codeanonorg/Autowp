@@ -1,2 +1,3 @@
 (library 
-  (name auto_wp))
+  (name auto_wp)
+  (libraries opal))
