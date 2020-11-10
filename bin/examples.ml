@@ -19,10 +19,12 @@ let post = "r >= a and r >= b" |> parse_spec
 
 let prog' = "
   inv: x >= 0
-  var: 10 - x
-  while (x <= 10) {
-    x = x + 1;
+  var: x
+  while (x > 0) {
+    x = x - 1;
   }" |> parse_prog
+
+let post' = "x = 0" |> parse_spec
 
 (* Print the proof goal *)
 let () =
@@ -31,6 +33,6 @@ let () =
   |> print_endline
 
 let () =
-  wp prog' top
+  wp prog' post'
   |> str_of_form
   |> print_endline

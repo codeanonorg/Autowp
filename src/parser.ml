@@ -101,17 +101,16 @@ and parse_while inp =
     return (While (inv, var, cond, body))
   end inp
 
-
 let parse_spec_opt s = parse parse_cond (LazyStream.of_string s)
 
 let parse_prog_opt s = parse parse_seq (LazyStream.of_string s)
 
 let parse_spec s =
   match parse_spec_opt s with
-  | None -> failwith "Parsing error"
+  | None -> failwith "Parsing error [spec]"
   | Some x -> x
 
 let parse_prog s =
   match parse_prog_opt s with
-  | None -> failwith "Parsing error"
+  | None -> failwith "Parsing error [prog]"
   | Some x -> x

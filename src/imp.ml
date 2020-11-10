@@ -35,6 +35,7 @@ type stmt =
 (**
    [wp prog post] computes the weakest precondition of program [prog] with respect
    to a postcondition [post].
+   [wp] computes preconditions for partial correction only.
 
    TODO : Add variants and terminations
 *)
@@ -65,9 +66,6 @@ and make_decr inv var cond stmt =
   let next = Pred ("<=", [var; Var "?var"]) in
   let iter = wp stmt next in
   Impl (And (invnc, init), And (iter, min0))
-
-
-
 
 (** Convert a list of statements into a sequence *)
 let rec seqc_of_list l =
