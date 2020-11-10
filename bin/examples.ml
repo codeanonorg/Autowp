@@ -36,3 +36,8 @@ let () =
   wp prog' post'
   |> str_of_form
   |> print_endline
+
+let () = "(a = a or b = b and c = c) or d = d"
+         |> parse_spec
+         |> str_of_form
+         |> print_endline

@@ -32,6 +32,19 @@ type stmt =
   | While of invariant * variant * cond * stmt
   | Seqc of stmt * stmt
 
+
+module VarSet = Set.Make(String)
+
+let vars stmt =
+  let rec step = function
+    | Aff (x, _) -> VarSet.singleton x
+    | If (_, s) -> step s
+    | IfElse (_, s1, s2) -> VarSet.union (step s1) (step s2)
+    | Seqc (s1, s2)      -> VarSet.union (step s1) (step s2)
+    | While (_, _, _, s) -> step s
+  in
+  VarSet.fold (List.cons) (step stmt) []
+
 (**
    [wp prog post] computes the weakest precondition of program [prog] with respect
    to a postcondition [post].
@@ -42,7 +55,7 @@ type stmt =
 let rec wp (prog : stmt) (post : formula) =
   match prog with
   | Aff (name, expr) ->
-    alpha name expr post
+    subst name expr post
   | Seqc (stmt1, stmt2) ->
     wp stmt1 (wp stmt2 post)
   | If (cond, stmt) ->
@@ -55,7 +68,7 @@ let rec wp (prog : stmt) (post : formula) =
     And (case1, case2)
   | While (inv, _, cond, stmt) ->
     let init = inv in
-    let keep = Impl (And (cond, inv), wp stmt inv) in
+    let keep = Forall (vars stmt, Impl (And (cond, inv), wp stmt inv)) in
     let next = Impl (And (Not cond, inv), post) in
     And (init, And (keep, next))
 
