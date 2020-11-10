@@ -9,15 +9,17 @@
 
 open Logic
 
-(**
-   Expressions of IMP are terms in {!Logic}
-*)
+(** Expressions of IMP are terms in {!Logic} *)
 type expr = term
 
-(**
-   Conditions of IMP are {!formulas} in {!Logic}
-*)
+(** Conditions of IMP are {!formulas} in {!Logic} *)
 type cond = formula
+
+(** Invariants are {!formulas} in {!Logic} *)
+type invariant = formula
+
+(** Variants are {!formulas} in {!Logic} *)
+type variant = expr
 
 (**
    IMP statements
@@ -27,24 +29,35 @@ type stmt =
   | Aff of string * expr
   | If of cond * stmt
   | IfElse of cond * stmt * stmt
+  | While of invariant * variant * cond * stmt
   | Seqc of stmt * stmt
 
 (**
    [wp prog post] computes the weakest precondition of program [prog] with respect
    to a postcondition [post].
+
+   TODO : Add variants and terminations
 *)
-let rec wp (s : stmt) (q : formula) =
-  match s with
-  | Aff (v, e) ->
-    alpha v e q
-  | Seqc (s1, s2) ->
-    wp s1 (wp s2 q)
-  | If (c, s) ->
-    Impl (c, wp s q)
-  | IfElse (c, s1, s2) ->
-    let case1 = Impl (c, wp s1 q) in
-    let case2 = Impl (Not c, wp s2 q) in
+let rec wp (prog : stmt) (post : formula) =
+  match prog with
+  | Aff (name, expr) ->
+    alpha name expr post
+  | Seqc (stmt1, stmt2) ->
+    wp stmt1 (wp stmt2 post)
+  | If (cond, stmt) ->
+    let case1 = Impl (cond, wp stmt post) in
+    let case2 = Impl (Not cond, post) in
     And (case1, case2)
+  | IfElse (cond, stmt1, stmt2) ->
+    let case1 = Impl (cond, wp stmt1 post) in
+    let case2 = Impl (Not cond, wp stmt2 post) in
+    And (case1, case2)
+  | While (inv, _, cond, stmt) ->
+    let init = inv in
+    let keep = Impl (And (cond, inv), wp stmt inv) in
+    let next = Impl (And (Not cond, inv), post) in
+    And (init, And (keep, next))
+
 
 (** Convert a list of statements into a sequence *)
 let rec seqc_of_list l =

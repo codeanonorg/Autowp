@@ -61,7 +61,8 @@ let rec parse_seq inp = ((some parse_stmt) => seqc_of_list) inp
 and parse_stmt inp =
   ((spaces >> parse_aff)
    <|> (spaces >> parse_ifElse)
-   <|> (spaces >> parse_if)) inp
+   <|> (spaces >> parse_if)
+   <|> (spaces >> parse_while)) inp
 
 and parse_aff =
   let* dst = spaces >> parse_id in
@@ -87,6 +88,19 @@ and parse_ifElse inp =
     let* body2 = spaces >> between (exactly '{') (exactly '}') parse_seq in
     return (IfElse (cond, body1, body2))
   end inp
+
+and parse_while inp =
+  begin
+    let* _    = token "inv:" in
+    let* inv  = spaces >> parse_cond in
+    let* _    = token "var:" in
+    let* var  = spaces >> parse_expr in
+    let* _    = token "while" << spaces in
+    let* cond = spaces >> parens parse_cond << spaces in
+    let* body = between (exactly '{') (exactly '}') parse_seq in
+    return (While (inv, var, cond, body))
+  end inp
+
 
 let parse_spec_opt s = parse parse_cond (LazyStream.of_string s)
 
