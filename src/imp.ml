@@ -58,6 +58,16 @@ let rec wp (prog : stmt) (post : formula) =
     let next = Impl (And (Not cond, inv), post) in
     And (init, And (keep, next))
 
+and make_decr inv var cond stmt =
+  let invnc = And (inv, cond) in
+  let init = Pred ("=", [Var "?var"; var]) in
+  let min0 = Pred ("<=", [Int 0; Var "?var"]) in
+  let next = Pred ("<=", [var; Var "?var"]) in
+  let iter = wp stmt next in
+  Impl (And (invnc, init), And (iter, min0))
+
+
+
 
 (** Convert a list of statements into a sequence *)
 let rec seqc_of_list l =
