@@ -219,20 +219,32 @@ and parse_while inp =
     return (Imp.While (inv, var, cond, body))
   end inp
 
+let parse_anot_prog =
+  let* _    = token "pre:" << spaces in
+  let* pre  = parse_form in
+  let* _    = token "post:" << spaces in
+  let* post = parse_form in
+  let* prog = spaces >> parse_seq in
+  return (pre, post, prog)
+
 (** {2 String parsers} *)
 
-let parse_spec s = 
-  match (parse_form << spaces) (LazyStream.of_string s) with
-  | Some (x, Nil) -> x
-  | Some (_, _) ->
-    failwith "parse error [spec], remaining chars"
-  | None ->
-    failwith "parse error [spec]"
+let form_err = "Parsing error while parsing a formula"
+let prog_err = "Parsing error while parsing a program"
 
-let parse_prog s =
-  match (parse_stmt << spaces) (LazyStream.of_string s) with
+let parse_all err p s =
+  match (p << spaces) s with
   | Some (x, Nil) -> x
-  | Some (_, _) ->
-    failwith "parse error [prog], remaining chars"
-  | None ->
-    failwith "parse error [prog]"
+  | _ -> prerr_endline err; exit 1
+
+let form_of_string s =
+  parse_all form_err parse_form (LazyStream.of_string s)
+
+let prog_of_string s =
+  parse_all prog_err parse_seq (LazyStream.of_string s)
+
+let anot_prog_of_string s =
+  parse_all prog_err parse_anot_prog (LazyStream.of_string s)
+
+let parse_file ic =
+  parse_all prog_err parse_anot_prog (LazyStream.of_channel ic)

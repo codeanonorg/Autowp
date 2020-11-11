@@ -18,7 +18,7 @@ type cond = formula
 (** Invariants are {!formulas} in {!Logic} *)
 type invariant = formula
 
-(** Variants are {!formulas} in {!Logic} *)
+(** Variants are arithmetic expressions *)
 type variant = expr
 
 (**

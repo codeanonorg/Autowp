@@ -29,8 +29,12 @@ let rec subst_term v e = function
 (** Substitute an id with a term in a formula *)
 let rec subst v e f =
   match f with
-  | Forall (ts, f) -> Forall (ts, subst v e f)
-  | Exitsts (ts, f) -> Exitsts (ts, subst v e f)
+  | Forall (ts, f) ->
+    if List.mem v ts then f
+    else Forall (ts, subst v e f)
+  | Exitsts (ts, f) ->
+    if List.mem v ts then f
+    else Exitsts (ts, subst v e f)
   | Pred (p, fs)  -> Pred (p, List.map (subst_term v e) fs)
   | Or (f1, f2)   -> Or (subst v e f1, subst v e f2)
   | And (f1, f2)  -> And (subst v e f1, subst v e f2)

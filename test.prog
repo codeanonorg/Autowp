@@ -1,0 +1,10 @@
+pre: x >= 0
+post: x = 0
+
+a = 1;
+
+inv: x >= 0 and a = 1
+var: x
+while (x > 0) {
+  x = x - 1;
+}

@@ -1,4 +1,4 @@
 (library 
-  (name autowp)
-  (public_name autowp)
+  (name autowp_lib)
+  (public_name autowp_lib)
   (libraries opal))
