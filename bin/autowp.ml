@@ -2,14 +2,15 @@ open Autowp_lib.Parser
 open Autowp_lib.Logic
 open Autowp_lib.Notations
 open Autowp_lib.Imp
+open Filename
 
 let input = Sys.argv.(1)
 
 let (pre, post, prog) = parse_file (open_in input)
 
-
 let () =
-  print_endline "Precondition  :";
+  generate_coq (remove_extension (basename input)) (pre --> (wp prog post));
+  print_endline "Precondition :";
   Printf.printf "   %s\n\n" (str_of_form pre);
   print_endline "Postcondition :";
   Printf.printf "   %s\n\n" (str_of_form post);
