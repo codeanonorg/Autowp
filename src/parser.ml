@@ -3,93 +3,157 @@
 *)
 
 open Opal
-open Logic
-open Imp
 open Notations
 
+(** {2 parsing helpers} *)
+
+(** Parse one or more [p]s *)
 let some p = many p >>= (function
     | [] -> mzero
     | xs -> return xs)
 
-let parse_id = some letter => implode
-let parse_nat = some digit => (implode % int_of_string)
-
-let parse_var = parse_id => (fun x -> Var x)
-let parse_int = parse_nat => (fun x -> Int x)
+(** Let notation for bindings *)
+let (let*) = (>>=)
 
 let parens p = between (exactly '(') (exactly ')') p
 
-let parse_add = (spaces >> exactly '+' << spaces) >> return add
-let parse_sub = (spaces >> exactly '-' << spaces) >> return sub
-let parse_mul = (spaces >> exactly '*' << spaces) >> return mul
-let parse_div = (spaces >> exactly '/' << spaces) >> return div
+(** {2 Usefull parsers} *)
 
-let parse_conj = (token "and") >> return (fun x y -> And (x, y))
-let parse_disj = (token "or") >> return (fun x y -> Or (x, y))
-let parse_impl = (token "->") >> return (fun x y -> Impl (x, y))
+(** Parse an identifier *)
+let parse_id = some letter => implode
 
+(** Parse a (non negative) natural number *)
+let parse_nat = some digit => (implode % int_of_string)
+
+(** Parse a relative number *)
+let parse_rel =
+  (token "-" >> parse_nat => (fun x -> -x))
+  <|> parse_nat
+
+(** Parse an integer number *)
+let parse_int = parse_rel => (fun x -> Logic.Int x)
+
+(** Parse variable *)
+let parse_var = parse_id => (fun x -> Logic.Var x)
+
+(** Parse items separated by a comma *)
+let parse_commasep p = sep_by (spaces >> p) (token ",")
+
+(** Parse items separated by a comma and parenthesized *)
+let parse_args p = parens (parse_commasep p)
+
+(** {2 Parse arithmetic operators} *)
+
+let op_add = (spaces >> exactly '+' << spaces) >> return add
+let op_sub = (spaces >> exactly '-' << spaces) >> return sub
+let op_mul = (spaces >> exactly '*' << spaces) >> return mul
+let op_div = (spaces >> exactly '/' << spaces) >> return div
+
+(** {2 Parsers for logic connectors} *)
+
+let op_and = (token "and") >> return (fun x y -> Logic.And (x, y))
+let op_or = (token "or") >> return (fun x y -> Logic.Or (x, y))
+let op_impl = (token "->") >> return (fun x y -> Logic.Impl (x, y))
+
+(** {2 Parsers for arithmetic expressions} *)
+
+(** Parse an expression *)
 let rec parse_expr inp =
-  (spaces >> chainl1 parse_term (parse_add <|> parse_sub)) inp
-and parse_term inp =
-  (spaces >> chainl1 parse_factor (parse_mul <|> parse_div)) inp
+  (spaces >> chainl1 parse_product (op_add <|> op_sub)) inp
+
+(** Parse a product *)
+and parse_product inp =
+  (spaces >> chainl1 parse_factor (op_mul <|> op_div)) inp
+
+(** Parse the negation of an expression *)
+and parse_negation inp =
+  (token "-" >> parse_expr => (fun x -> Logic.Fun ("-", [x]))) inp
+
+(** Parse a factor.
+    A factor is either a negation, a parenthesised expression,
+    a variable or an integer *)
 and parse_factor inp =
-  (spaces >> (parens parse_expr <|> parse_var <|> parse_int)) inp
+  begin
+    parse_negation
+    <|> (spaces >> parens parse_expr)
+    <|> (spaces >> parse_var)
+    <|> (spaces >> parse_int)
+  end inp
 
-let (let*) = (>>=)
+(** {2 Parsers for arithmetic comparisons } *)
 
+(** A list of parsers for comparison symbols (<=, >=, <, >, =) *)
 let comparators = List.map token ["<="; ">="; "<"; ">"; "="]
 
+(** Parse a comparison expression *)
 let parse_comp =
   let* a = parse_expr in
   let* b = choice comparators in
   let* c = parse_expr in
-  return (Pred (b, [a; c]))
+  return (Logic.Pred (b, [a; c]))
 
-let parse_commasep p = sep_by (spaces >> p) (token ",")
+(** {2 Parsers for logic expressions } *)
 
-let parse_args p = parens (parse_commasep p)
-
+(** Parse a predicate *)
 let parse_pred =
   let* p = parse_id in
   let* b = parse_args parse_expr in
-  return (Pred (p, b))
+  return (Logic.Pred (p, b))
 
+(** Parse a function application *)
 let parse_fun =
   let* p = parse_id in
   let* b = parse_args parse_expr in
-  return (Fun (p, b))
+  return (Logic.Fun (p, b))
 
+(** Parse a logic formula *)
 let rec parse_form inp =
   begin
     parse_forall
     <|> parse_exists
     <|> parse_nq_form
   end inp
+
+(** Parse a formula starting with a universal quantificator *)
 and parse_forall inp =
   begin
     let* _  = token "forall" << spaces in
     let* vs = parse_commasep parse_id in
     let* _  = token ":" in
     let* f  = parse_form in
-    return (Forall (vs, f))
+    return (Logic.Forall (vs, f))
   end inp
+
+(** Parse a formula starting with an existential quantificator *)
 and parse_exists inp =
   begin
     let* _  = token "exists" << spaces in
     let* vs = parse_commasep parse_id in
     let* _  = token ":" in
     let* f  = parse_form in
-    return (Exitsts (vs, f))
+    return (Logic.Exitsts (vs, f))
   end inp
+
+(** Parse a formula which does'nt start with a qantificator *)
 and parse_nq_form inp =
-  (spaces >> chainr1 parse_limpl parse_impl) inp
-and parse_limpl inp   =
-  (spaces >> chainl1 parse_lterm parse_disj) inp
-and parse_lterm inp   =
-  (spaces >> chainl1 parse_lfactor parse_conj) inp
-and parse_not inp     =
-  (token "not" >> spaces >> parse_lfactor => (fun x -> Not x)) inp
-and parse_lfactor inp =
+  (spaces >> chainr1 parse_disjunction op_impl) inp
+
+(** Parse a disjunction *)
+and parse_disjunction inp   =
+  (spaces >> chainl1 parse_conjunction op_or) inp
+
+(** Parse a conjunction *)
+and parse_conjunction inp   =
+  (spaces >> chainl1 parse_atom op_and) inp
+
+(** Parse a negation *)
+and parse_not inp   =
+  (token "not" >> spaces >> parse_atom => (fun x -> Logic.Not x)) inp
+
+(** Parse an atomic formula.
+    An atomic formula is either a quantified formula, a comparison, a negation,
+    a single predicate applied to arguments or a parenthesized formula *)
+and parse_atom inp  =
   begin
     parse_forall
     <|> parse_exists
@@ -99,30 +163,39 @@ and parse_lfactor inp =
     <|> parens (parse_form)
   end inp
 
+(** {2 Parsers for IMP programs } *)
 
-let rec parse_seq inp = ((some parse_stmt) => seqc_of_list) inp
+(** Parse a sequence of statements *)
+let rec parse_seq inp =
+  ((some parse_stmt) => Imp.seqc_of_list) inp
 
+(** Parse a single statement *)
 and parse_stmt inp =
   ((spaces >> parse_aff)
    <|> (spaces >> parse_ifElse)
    <|> (spaces >> parse_if)
    <|> (spaces >> parse_while)) inp
 
-and parse_aff =
-  let* dst = spaces >> parse_id in
-  let* _   = token "=" in
-  let* src = parse_expr in
-  let* _ = token ";" << spaces in
-  return (Aff (dst, src))
+(** Parse an affectation *)
+and parse_aff inp =
+  begin
+    let* dst = spaces >> parse_id in
+    let* _   = token "=" in
+    let* src = parse_expr in
+    let* _ = token ";" << spaces in
+    return (Imp.Aff (dst, src))
+  end inp
 
+(** Parse a conditional (withou Else branch) *)
 and parse_if inp =
   begin
     let* _ = token "if" in
     let* cond = spaces >> parens parse_nq_form << spaces in
     let* body = between (exactly '{') (exactly '}') parse_seq in
-    return (If (cond, body))
+    return (Imp.If (cond, body))
   end inp
 
+(** Parse a conditional *)
 and parse_ifElse inp =
   begin
     let* _ = token "if" in
@@ -130,9 +203,10 @@ and parse_ifElse inp =
     let* body1 = between (exactly '{') (exactly '}') parse_seq in
     let* _ = token "else" in
     let* body2 = spaces >> between (exactly '{') (exactly '}') parse_seq in
-    return (IfElse (cond, body1, body2))
+    return (Imp.IfElse (cond, body1, body2))
   end inp
 
+(** Parse while loop *)
 and parse_while inp =
   begin
     let* _    = token "inv:" in
@@ -142,8 +216,10 @@ and parse_while inp =
     let* _    = token "while" << spaces in
     let* cond = spaces >> parens parse_nq_form << spaces in
     let* body = between (exactly '{') (exactly '}') parse_seq in
-    return (While (inv, var, cond, body))
+    return (Imp.While (inv, var, cond, body))
   end inp
+
+(** {2 String parsers} *)
 
 let parse_spec s = 
   match (parse_form << spaces) (LazyStream.of_string s) with

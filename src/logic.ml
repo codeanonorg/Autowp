@@ -93,8 +93,8 @@ let rec str_of_form f =
   | Impl (a, b) ->
     sprintf "%s -> %s" (parens a) (parens b)
   | And (a, b) ->
-    sprintf "%s /\\ %s" (parens a) (parens b)
+    sprintf "%s and %s" (parens a) (parens b)
   | Or (a, b) ->
-    sprintf "%s \\/ %s" (parens a) (parens b)
+    sprintf "%s or %s" (parens a) (parens b)
   | Not f ->
-    sprintf "!%s" (parens f)
+    sprintf "not %s" (parens f)
