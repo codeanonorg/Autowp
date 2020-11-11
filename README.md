@@ -2,7 +2,7 @@
 
 **AutoWP** est un programme pour calculer automatiquement les [*Weakest Preconditions*](https://www.wikiwand.com/en/Predicate_transformer_semantics) de Dijkstra sur des petits programmes impératifs. L'objectif de cet outil est de proposer un guide d'introduction à la notion de preuve formelle à destination des étudiants de licence. AutoWp n'est absolument pas destiné à fonctionner sur des exemples compliqués, mais il suffira largement pour montrer l'intérêt du calcul des WP sur des exemples pédagogiques.
 
-## Programmes, spécifications, exemple détaillé
+## Programmes, spécifications et un exemple détaillé
 
 Pour faire la preuve (mathématique) de correction d'un programme, deux ingrédients sont absolument nécessaires. Tout d'abord une [spécification](https://www.wikiwand.com/fr/M%C3%A9thode_formelle_(informatique)#/Sp%C3%A9cification) du programme, c'est à dire la description précise de ce qu'est censé faire le programme du début à la fin. Il faut également une description précise du programme en lui même. **AutoWp** est fournis avec un langage de programmation qui permet d'exprimer à la fois un **programme** et sa **specification**.
 
@@ -57,4 +57,4 @@ L'exemple choisi montre bien que prouver formellement un algorithme n'est pas un
 
 ## Contribuer
 
-La version **AutoWp** est une version très expérimentale. De nombreuses fonctionnalités sont en cours d'ajouts, notamment pour clarifier et détailler les étapes nécessaires pour prouver un algorithme. Toute contribution est donc bienvenue. N'hésitez pas à me contacter à l'adresse [arthur.correnson@ens-rennes.fr](arthur.correnson@ens-rennes.fr) en cas de question !
+La version actuelle d'**AutoWp** est très expérimentale. De nombreuses fonctionnalités sont en cours d'ajout, notamment pour clarifier et détailler les étapes nécessaires pour prouver un algorithme. Toute contribution est donc bienvenue. N'hésitez pas à me contacter à l'adresse [arthur.correnson@ens-rennes.fr](arthur.correnson@ens-rennes.fr) en cas de questions !
