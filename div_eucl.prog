@@ -1,0 +1,11 @@
+pre: a >= 0 and b >= 0
+post: r >= 0 and r <= a and a = b * q + r
+
+r = a;
+q = 0;
+
+inv:
+while (r >= b) {
+  r = r - b
+  q = q + 1
+}

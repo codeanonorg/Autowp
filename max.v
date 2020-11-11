@@ -4,7 +4,7 @@ Require Import ZArith Omega.
 
 Open Scope Z_scope.
 Lemma max :
-	forall (b a : Z), a >= 0 \/ b >= 0 -> (a <= b -> b >= a \/ b >= b \/ (b = a /\ b = b)) \/ (not (a <= b) -> a >= a \/ a >= b \/ (a = a /\ a = b)).
+	forall (b a : Z), a >= 0 /\ b >= 0 -> (a <= b -> b >= a /\ b >= b /\ (b = a \/ b = b)) /\ (not (a <= b) -> a >= a /\ a >= b /\ (a = a \/ a = b)).
 Proof.
 	try (intros; auto; omega).
 Qed.
