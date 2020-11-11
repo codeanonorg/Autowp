@@ -1,0 +1,8 @@
+pre: a >= 0 and b >= 0
+post: (max >= a and max >= b) and (max = a or max = b)
+
+if (a <= b) {
+  m = b;
+} else {
+  m = a;
+}
