@@ -1,6 +1,6 @@
 # Autowp
 
-**AutoWP** est un petit programme pour calculer automatiquement les [*Weakest Preconditions*](https://www.wikiwand.com/en/Predicate_transformer_semantics) de Dijkstra sur des petits programmes impératifs. L'objectif de cet outil est de proposer un guide d'introduction à la notion de preuve formelle à destination des étudiants de licence. AutoWp n'est absolument pas destiné à fonctionner sur des exemples compliqués, mais il suffira largement pour montrer l'intérêt du calcul des WP sur des exemples pédagogiques.
+**AutoWP** est un programme pour calculer automatiquement les [*Weakest Preconditions*](https://www.wikiwand.com/en/Predicate_transformer_semantics) de Dijkstra sur des petits programmes impératifs. L'objectif de cet outil est de proposer un guide d'introduction à la notion de preuve formelle à destination des étudiants de licence. AutoWp n'est absolument pas destiné à fonctionner sur des exemples compliqués, mais il suffira largement pour montrer l'intérêt du calcul des WP sur des exemples pédagogiques.
 
 ## Programmes, spécifications, exemple détaillé
 
