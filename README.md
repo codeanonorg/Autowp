@@ -6,7 +6,7 @@
 
 Pour faire la preuve (mathématique) de correction d'un programme, deux ingrédients sont absolument nécessaires. Tout d'abord une [spécification](https://www.wikiwand.com/fr/M%C3%A9thode_formelle_(informatique)#/Sp%C3%A9cification) du programme, c'est à dire la description précise de ce qu'est censé faire le programme du début à la fin. Il faut également une description précise du programme en lui même. **AutoWp** est fournis avec un langage de programmation qui permet d'exprimer à la fois un **programme** et sa **specification**.
 
-Voici par exemple la specification et la preuve d'un programme qui calcul le maximum de deux entiers positifs `a` et `b`:
+Voici par exemple un programme qui calcul le maximum de deux entiers positifs `a` et `b`:
 
 ```
 pre: a >= 0 and b >= 0
