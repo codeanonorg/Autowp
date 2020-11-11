@@ -51,9 +51,9 @@ let op_div = (spaces >> exactly '/' << spaces) >> return div
 
 (** {2 Parsers for logic connectors} *)
 
-let op_and = (token "and") >> return (fun x y -> Logic.And (x, y))
-let op_or = (token "or") >> return (fun x y -> Logic.Or (x, y))
-let op_impl = (token "->") >> return (fun x y -> Logic.Impl (x, y))
+let op_and = (token "and" << spaces) >> return (fun x y -> Logic.And (x, y))
+let op_or = (token "or" << spaces) >> return (fun x y -> Logic.Or (x, y))
+let op_impl = (token "->" << spaces) >> return (fun x y -> Logic.Impl (x, y))
 
 (** {2 Parsers for arithmetic expressions} *)
 
@@ -139,7 +139,7 @@ and parse_nq_form inp =
   (spaces >> chainr1 parse_disjunction op_impl) inp
 
 (** Parse a disjunction *)
-and parse_disjunction inp   =
+and parse_disjunction inp =
   (spaces >> chainl1 parse_conjunction op_or) inp
 
 (** Parse a conjunction *)
@@ -155,12 +155,12 @@ and parse_not inp   =
     a single predicate applied to arguments or a parenthesized formula *)
 and parse_atom inp  =
   begin
-    parse_forall
-    <|> parse_exists
+    parens (parse_form)
     <|> parse_comp
+    <|> parse_forall
+    <|> parse_exists
     <|> parse_not
     <|> parse_pred
-    <|> parens (parse_form)
   end inp
 
 (** {2 Parsers for IMP programs } *)
@@ -235,6 +235,7 @@ let prog_err = "Parsing error while parsing a program"
 let parse_all err p s =
   match (p << spaces) s with
   | Some (x, Nil) -> x
+  | Some (_, _) -> prerr_endline (err ^ "[buffer]"); exit 1
   | _ -> prerr_endline err; exit 1
 
 let form_of_string s =

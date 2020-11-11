@@ -17,6 +17,3 @@ let () =
   print_endline "[1. partial correction]";
   Printf.printf "   %s\n\n" (pre --> (wp prog post) |> str_of_form);
   print_endline "[2. termination] not available yet"
-
-
-
