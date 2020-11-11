@@ -45,15 +45,59 @@ let parse_comp =
   let* c = parse_expr in
   return (Pred (b, [a; c]))
 
-let rec parse_cond inp = (spaces >> chainr1 parse_limpl parse_impl ) inp
-and parse_limpl inp   = (spaces >> chainl1 parse_lterm parse_disj) inp
-and parse_lterm inp   = (spaces >> chainl1 parse_lfactor parse_conj) inp
-and parse_lfactor inp = (
-  (spaces >> parens parse_cond)
-  <|>
-  (token "not" >> spaces >> parse_lfactor => (fun x -> Not x))
-  <|> parse_comp
-) inp
+let parse_commasep p = sep_by (spaces >> p) (token ",")
+
+let parse_args p = parens (parse_commasep p)
+
+let parse_pred =
+  let* p = parse_id in
+  let* b = parse_args parse_expr in
+  return (Pred (p, b))
+
+let parse_fun =
+  let* p = parse_id in
+  let* b = parse_args parse_expr in
+  return (Fun (p, b))
+
+let rec parse_form inp =
+  begin
+    parse_forall
+    <|> parse_exists
+    <|> parse_nq_form
+  end inp
+and parse_forall inp =
+  begin
+    let* _  = token "forall" << spaces in
+    let* vs = parse_commasep parse_id in
+    let* _  = token ":" in
+    let* f  = parse_form in
+    return (Forall (vs, f))
+  end inp
+and parse_exists inp =
+  begin
+    let* _  = token "exists" << spaces in
+    let* vs = parse_commasep parse_id in
+    let* _  = token ":" in
+    let* f  = parse_form in
+    return (Exitsts (vs, f))
+  end inp
+and parse_nq_form inp =
+  (spaces >> chainr1 parse_limpl parse_impl) inp
+and parse_limpl inp   =
+  (spaces >> chainl1 parse_lterm parse_disj) inp
+and parse_lterm inp   =
+  (spaces >> chainl1 parse_lfactor parse_conj) inp
+and parse_not inp     =
+  (token "not" >> spaces >> parse_lfactor => (fun x -> Not x)) inp
+and parse_lfactor inp =
+  begin
+    parse_forall
+    <|> parse_exists
+    <|> parse_comp
+    <|> parse_not
+    <|> parse_pred
+    <|> parens (parse_form)
+  end inp
 
 
 let rec parse_seq inp = ((some parse_stmt) => seqc_of_list) inp
@@ -74,7 +118,7 @@ and parse_aff =
 and parse_if inp =
   begin
     let* _ = token "if" in
-    let* cond = spaces >> parens parse_cond << spaces in
+    let* cond = spaces >> parens parse_nq_form << spaces in
     let* body = between (exactly '{') (exactly '}') parse_seq in
     return (If (cond, body))
   end inp
@@ -82,7 +126,7 @@ and parse_if inp =
 and parse_ifElse inp =
   begin
     let* _ = token "if" in
-    let* cond = spaces >> parens parse_cond << spaces in
+    let* cond = spaces >> parens parse_nq_form << spaces in
     let* body1 = between (exactly '{') (exactly '}') parse_seq in
     let* _ = token "else" in
     let* body2 = spaces >> between (exactly '{') (exactly '}') parse_seq in
@@ -92,25 +136,27 @@ and parse_ifElse inp =
 and parse_while inp =
   begin
     let* _    = token "inv:" in
-    let* inv  = spaces >> parse_cond in
+    let* inv  = spaces >> parse_nq_form in
     let* _    = token "var:" in
     let* var  = spaces >> parse_expr in
     let* _    = token "while" << spaces in
-    let* cond = spaces >> parens parse_cond << spaces in
+    let* cond = spaces >> parens parse_nq_form << spaces in
     let* body = between (exactly '{') (exactly '}') parse_seq in
     return (While (inv, var, cond, body))
   end inp
 
-let parse_spec_opt s = parse parse_cond (LazyStream.of_string s)
-
-let parse_prog_opt s = parse parse_seq (LazyStream.of_string s)
-
-let parse_spec s =
-  match parse_spec_opt s with
-  | None -> failwith "Parsing error [spec]"
-  | Some x -> x
+let parse_spec s = 
+  match (parse_form << spaces) (LazyStream.of_string s) with
+  | Some (x, Nil) -> x
+  | Some (_, _) ->
+    failwith "parse error [spec], remaining chars"
+  | None ->
+    failwith "parse error [spec]"
 
 let parse_prog s =
-  match parse_prog_opt s with
-  | None -> failwith "Parsing error [prog]"
-  | Some x -> x
+  match (parse_stmt << spaces) (LazyStream.of_string s) with
+  | Some (x, Nil) -> x
+  | Some (_, _) ->
+    failwith "parse error [prog], remaining chars"
+  | None ->
+    failwith "parse error [prog]"

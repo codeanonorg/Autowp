@@ -57,17 +57,13 @@ let rec str_of_term =
   | Int i -> string_of_int i
 
 let priority = function
-  | Pred _ -> 7
-  | Forall _ -> 1
+  | Pred _    -> 7
+  | Forall _  -> 1
   | Exitsts _ -> 2
-  | Impl _ -> 3
-  | Or _ -> 4
-  | And _ -> 5
-  | Not _ -> 6
-
-let assoc = function
-  | Impl _ -> `R
-  | _ -> `L
+  | Impl _    -> 3
+  | Or _      -> 4
+  | And _     -> 5
+  | Not _     -> 6
 
 (** Formula to string conversion *)
 let rec str_of_form f =

@@ -37,7 +37,7 @@ let () =
   |> str_of_form
   |> print_endline
 
-let () = "(a = a or b = b and c = c) or d = d"
+let () = "not (forall u : bounded(u) -> exists a, b : forall x : in(x, u) -> a <= x and b <= x)"
          |> parse_spec
          |> str_of_form
          |> print_endline
