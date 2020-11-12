@@ -67,9 +67,10 @@ let rec wp (prog : stmt) (post : formula) =
     let case2 = Impl (Not cond, wp stmt2 post) in
     And (case1, case2)
   | While (inv, _, cond, stmt) ->
+    let aff_vars = vars stmt in
     let init = inv in
-    let keep = Forall (vars stmt, Impl (And (cond, inv), wp stmt inv)) in
-    let next = Impl (And (Not cond, inv), post) in
+    let keep = Forall (aff_vars, Impl (And (cond, inv), wp stmt inv)) in
+    let next = Forall (aff_vars, Impl (And (Not cond, inv), post)) in
     And (init, And (keep, next))
 
 and make_decr inv var cond stmt =

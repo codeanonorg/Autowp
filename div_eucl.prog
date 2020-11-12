@@ -1,10 +1,10 @@
 pre: a >= 0 and b > 0
-post: r >= 0 and r <= b and a = (b * q + r)
+post: r >= 0 and r < b and a = (b * q + r)
 
 r = a;
 q = 0;
 
-inv: a = (b * q + r)
+inv: r >= 0 and a = (b * q + r)
 var: r
 while (r >= b) {
   r = r - b;
