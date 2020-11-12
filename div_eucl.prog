@@ -1,11 +1,12 @@
-pre: a >= 0 and b >= 0
-post: r >= 0 and r <= a and a = b * q + r
+pre: a >= 0 and b > 0
+post: r >= 0 and r <= b and a = (b * q + r)
 
 r = a;
 q = 0;
 
-inv:
+inv: a = (b * q + r)
+var: r
 while (r >= b) {
-  r = r - b
-  q = q + 1
+  r = r - b;
+  q = q + 1;
 }

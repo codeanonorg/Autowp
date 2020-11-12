@@ -37,8 +37,8 @@ module VarSet = Set.Make(String)
 
 let vars stmt =
   let rec step = function
-    | Aff (x, _) -> VarSet.singleton x
-    | If (_, s) -> step s
+    | Aff (x, _)  -> VarSet.singleton x
+    | If (_, s)   -> step s
     | IfElse (_, s1, s2) -> VarSet.union (step s1) (step s2)
     | Seqc (s1, s2)      -> VarSet.union (step s1) (step s2)
     | While (_, _, _, s) -> step s

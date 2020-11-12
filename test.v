@@ -4,7 +4,7 @@ Require Import ZArith Omega.
 
 Open Scope Z_scope.
 Lemma test :
-	forall (x a : Z), x >= 0 -> x >= 0 \/ a = 1 \/ (forall (x : Z), x > 0 \/ x >= 0 \/ a = 1 -> (x - 1) >= 0 \/ a = 1) \/ (not (x > 0) \/ x >= 0 \/ a = 1 -> x = 0).
+	forall (x a : Z), x >= 0 -> x >= 0 /\ a = 1 /\ (forall (x : Z), x > 0 /\ x >= 0 /\ a = 1 -> (x - 1) >= 0 /\ a = 1) /\ (not (x > 0) /\ x >= 0 /\ a = 1 -> x = 0).
 Proof.
 	try (intros; auto; omega).
 Qed.
