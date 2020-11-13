@@ -45,45 +45,15 @@ let vars stmt =
   in
   VarSet.fold (List.cons) (step stmt) []
 
-(**
-   [wp prog post] computes the weakest precondition of program [prog] with respect
-   to a postcondition [post].
-   [wp] computes preconditions for partial correction only.
-
-   TODO : Add variants and terminations
-*)
-let rec wp (prog : stmt) (post : formula) =
-  match prog with
-  | Aff (name, expr) ->
-    subst name expr post
-  | Seqc (stmt1, stmt2) ->
-    wp stmt1 (wp stmt2 post)
-  | If (cond, stmt) ->
-    let case1 = Impl (cond, wp stmt post) in
-    let case2 = Impl (Not cond, post) in
-    And (case1, case2)
-  | IfElse (cond, stmt1, stmt2) ->
-    let case1 = Impl (cond, wp stmt1 post) in
-    let case2 = Impl (Not cond, wp stmt2 post) in
-    And (case1, case2)
-  | While (inv, _, cond, stmt) ->
-    let aff_vars = vars stmt in
-    let init = inv in
-    let keep = Forall (aff_vars, Impl (And (cond, inv), wp stmt inv)) in
-    let next = Forall (aff_vars, Impl (And (Not cond, inv), post)) in
-    And (init, And (keep, next))
-
-and make_decr inv var cond stmt =
-  let invnc = And (inv, cond) in
-  let init = Pred ("=", [Var "?var"; var]) in
-  let min0 = Pred ("<=", [Int 0; Var "?var"]) in
-  let next = Pred ("<=", [var; Var "?var"]) in
-  let iter = wp stmt next in
-  Impl (And (invnc, init), And (iter, min0))
-
 (** Convert a list of statements into a sequence *)
-let rec seqc_of_list l =
+let rec prog_of_list l =
   match l with
   | []  -> failwith "empty sequences are'nt allowed"
   | [x] -> x
-  | x::xs -> Seqc (x, seqc_of_list xs)
+  | x::xs -> Seqc (x, prog_of_list xs)
+
+(** Convert a sequence into a list of statements *)
+let rec list_of_prog s =
+  match s with
+  | Aff _ | If _ | IfElse _ | While _ -> [s]
+  | Seqc (s1, s2) -> (list_of_prog s1) @ (list_of_prog s2)

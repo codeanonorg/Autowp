@@ -167,7 +167,7 @@ and parse_atom inp  =
 
 (** Parse a sequence of statements *)
 let rec parse_seq inp =
-  ((some parse_stmt) => Imp.seqc_of_list) inp
+  ((some parse_stmt) => Imp.prog_of_list) inp
 
 (** Parse a single statement *)
 and parse_stmt inp =
